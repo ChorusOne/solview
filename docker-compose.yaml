@@ -1,0 +1,10 @@
+version: '3.9'
+services:
+  solview:
+    image: chorusone/solview:${VERSION}
+    env_file:
+    - .env
+    build:
+      context: .    
+    ports:
+      - 8000:8000    

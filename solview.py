@@ -51,7 +51,7 @@ logger.setLevel(logging.DEBUG)
 '''
 def vote_accounts(node_address):
     logger.debug("Sending vote accounts request to {}...".format(node_address))
-    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getVoteAccounts', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'})
+    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getVoteAccounts', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
     data = res.json().get('result')
     if data is None or len(data) == 0:
       logger.error("getVoteAccounts call failed. Details: \n{}".format(data))
@@ -84,7 +84,7 @@ def vote_accounts(node_address):
 '''
 def cluster(node_address):
     logger.debug("Sending cluster request to {}...".format(node_address))
-    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getClusterNodes', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'})
+    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getClusterNodes', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
     data = res.json().get('result')
     if data is None or len(data) == 0:
       logger.error("getClusterNodes call failed. Details: \n{}".format(data))
@@ -116,7 +116,7 @@ curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '{"jso
 '''
 def skip_rates(node_address):
     logger.debug("Sending skip rates request to {}...".format(node_address))
-    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getBlockProduction', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'})
+    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getBlockProduction', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
     data = res.json().get('result')
     if data is None or len(data) == 0:
       logger.error("getBlockProduction call failed. Details: \n{}".format(data))
@@ -138,7 +138,7 @@ def skip_rates(node_address):
 
 def performance(node_address):
     logger.debug("Sending performance request to {}...".format(node_address))
-    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getRecentPerformanceSamples', 'id': 0, 'params': [1]}, headers={'Content-Type': 'application/json'})
+    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getRecentPerformanceSamples', 'id': 0, 'params': [1]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
     data = res.json().get('result')
     if data is None or len(data) == 0:
       logger.error("getRecentPerformanceSamples call failed. Details: \n{}".format(data))
@@ -158,7 +158,7 @@ def watch_accounts(node_address, accounts):
       curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0", "id":1, "method":"getBalance", "params":["83astBRguLMdt2h5U1Tpdq5tjFoJ6noeGwaY3mDLVcri"]}'
       '''
       logger.debug("Sending watch accounts request for {} to {}...".format(address, node_address))
-      res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getBalance', 'id': 0, 'params': [address]}, headers={'Content-Type': 'application/json'})
+      res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getBalance', 'id': 0, 'params': [address]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
       data = res.json().get('result')
       if data is None or len(data) == 0:
         logger.error("getBalance call failed. Details: \n{}".format(data))
@@ -169,7 +169,7 @@ def watch_accounts(node_address, accounts):
 def watch_spl_accounts(node_address, spl_accounts):
    for address in spl_accounts:
       logger.debug("Sending watch SPL accounts request for {} to {}...".format(address, node_address))
-      res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getTokenAccountBalance', 'id': 0, 'params': [address]}, headers={'Content-Type': 'application/json'})
+      res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getTokenAccountBalance', 'id': 0, 'params': [address]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
       data = res.json().get('result')
       if data is None or len(data) == 0:
         logger.error("getTokenAccountBalance call failed. Details: \n{}".format(data))

@@ -230,4 +230,5 @@ if __name__ == '__main__':
             sys.exit(0)
         except Exception:
           logger.exception("Exception occurred")
-          sys.exit(10)
+          # XXX
+          raise

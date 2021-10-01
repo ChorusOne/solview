@@ -4,6 +4,7 @@ from prometheus_client import start_http_server, Gauge
 
 import logging
 import os
+import random
 import requests
 import sys
 import time
@@ -51,8 +52,7 @@ logger.setLevel(logging.DEBUG)
 '''
 def vote_accounts(node_address):
     logger.debug(f"Sending vote accounts request to {node_address} ...")
-    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getVoteAccounts', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
-    data = res.json().get('result')
+    data = call_rpc(node_address, 'getVoteAccounts', [])
     if data is None or len(data) == 0:
       logger.error(f"getVoteAccounts call failed. Details:\n{data}")
       return
@@ -84,8 +84,7 @@ def vote_accounts(node_address):
 '''
 def cluster(node_address):
     logger.debug(f"Sending cluster request to {node_address} ...")
-    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getClusterNodes', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
-    data = res.json().get('result')
+    data = call_rpc(node_address, 'getClusterNodes', [])
     if data is None or len(data) == 0:
       logger.error(f"getClusterNodes call failed. Details:\n{data}")
       return
@@ -116,8 +115,7 @@ curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '{"jso
 '''
 def skip_rates(node_address):
     logger.debug(f"Sending skip rates request to {node_address} ...")
-    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getBlockProduction', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
-    data = res.json().get('result')
+    data = call_rpc(node_address, 'getBlockProduction', [])
     if data is None or len(data) == 0:
       logger.error(f"getBlockProduction call failed. Details:\n{data}")
       return
@@ -138,8 +136,7 @@ def skip_rates(node_address):
 
 def performance(node_address):
     logger.debug(f"Sending performance request to {node_address} ...")
-    res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getRecentPerformanceSamples', 'id': 0, 'params': [1]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
-    data = res.json().get('result')
+    data = call_rpc(node_address, 'getRecentPerformanceSamples', [1])
     if data is None or len(data) == 0:
       logger.error(f"getRecentPerformanceSamples call failed. Details:\n{data}")
       return
@@ -158,8 +155,7 @@ def watch_accounts(node_address, accounts):
       curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0", "id":1, "method":"getBalance", "params":["83astBRguLMdt2h5U1Tpdq5tjFoJ6noeGwaY3mDLVcri"]}'
       '''
       logger.debug(f"Sending watch accounts request for {address} to {node_address} ...")
-      res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getBalance', 'id': 0, 'params': [address]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
-      data = res.json().get('result')
+      data = call_rpc(node_address, 'getBalance', [address])
       if data is None or len(data) == 0:
         logger.error(f"getBalance call failed. Details:\n{data}")
         return
@@ -169,13 +165,31 @@ def watch_accounts(node_address, accounts):
 def watch_spl_accounts(node_address, spl_accounts):
    for address in spl_accounts:
       logger.debug(f"Sending watch SPL accounts request for {address} to {node_address} ...")
-      res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getTokenAccountBalance', 'id': 0, 'params': [address]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
-      data = res.json().get('result')
+      data = call_rpc(node_address, 'getTokenAccountBalance', [address])
       if data is None or len(data) == 0:
         logger.error(f"getTokenAccountBalance call failed. Details:\n{data}")
         return
 
       SOLVIEW_ACCOUNTS_SPL.labels(address).set(data.get('value').get('uiAmount'))
+
+
+def call_rpc(address, method, params):
+    connect_timeout_seconds = 7
+    read_timeout_seconds = 33
+    response = requests.post(
+        address,
+        json={
+            'jsonrpc': '2.0',
+            'method': method,
+            'id': hex(random.randrange(2**128)),
+            'params': params,
+        },
+        headers={
+            'Content-Type': 'application/json',
+        },
+        timeout=(connect_timeout_seconds, read_timeout_seconds),
+    )
+    return response.json().get('result')
 
 
 def main():

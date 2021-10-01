@@ -50,11 +50,11 @@ logger.setLevel(logging.DEBUG)
 'votePubkey': 'Dro1hjqsT291n8uADuwuE761E2Q3hgdzFYVrWBnBM9Pd'}
 '''
 def vote_accounts(node_address):
-    logger.debug("Sending vote accounts request to {}...".format(node_address))
+    logger.debug(f"Sending vote accounts request to {node_address} ...")
     res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getVoteAccounts', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
     data = res.json().get('result')
     if data is None or len(data) == 0:
-      logger.error("getVoteAccounts call failed. Details: \n{}".format(data))
+      logger.error(f"getVoteAccounts call failed. Details:\n{data}")
       return
     cluster_stake = [0,0]
     for status, status_code in {'current': 1, 'delinquent': 0}.items():
@@ -83,11 +83,11 @@ def vote_accounts(node_address):
 "rpc":null,"shredVersion":13490,"tpu":"139.178.69.97:8004","version":"1.6.22"}],"id":1}
 '''
 def cluster(node_address):
-    logger.debug("Sending cluster request to {}...".format(node_address))
+    logger.debug(f"Sending cluster request to {node_address} ...")
     res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getClusterNodes', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
     data = res.json().get('result')
     if data is None or len(data) == 0:
-      logger.error("getClusterNodes call failed. Details: \n{}".format(data))
+      logger.error(f"getClusterNodes call failed. Details:\n{data}")
       return
     cluster_versions = {}
     for node in data:
@@ -101,7 +101,7 @@ def cluster(node_address):
       major = int(iv/1000000)
       minor = int((iv%1000000)/1000)
       patch = int(iv%1000)
-      SOLVIEW_CLUSTER_VERSION_COUNT.labels("{}.{}.{}".format(major,minor,patch), iv).set(count)
+      SOLVIEW_CLUSTER_VERSION_COUNT.labels(f"{major}.{minor}.{patch}", iv).set(count)
 
 
 '''
@@ -115,11 +115,11 @@ curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '{"jso
         PUBKEY: [ TOTAL, PRODUCED ]
 '''
 def skip_rates(node_address):
-    logger.debug("Sending skip rates request to {}...".format(node_address))
+    logger.debug(f"Sending skip rates request to {node_address} ...")
     res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getBlockProduction', 'id': 0, 'params': []}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
     data = res.json().get('result')
     if data is None or len(data) == 0:
-      logger.error("getBlockProduction call failed. Details: \n{}".format(data))
+      logger.error(f"getBlockProduction call failed. Details:\n{data}")
       return
     skip_rates = []
     total_slots = 0
@@ -137,11 +137,11 @@ def skip_rates(node_address):
 
 
 def performance(node_address):
-    logger.debug("Sending performance request to {}...".format(node_address))
+    logger.debug(f"Sending performance request to {node_address} ...")
     res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getRecentPerformanceSamples', 'id': 0, 'params': [1]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
     data = res.json().get('result')
     if data is None or len(data) == 0:
-      logger.error("getRecentPerformanceSamples call failed. Details: \n{}".format(data))
+      logger.error(f"getRecentPerformanceSamples call failed. Details:\n{data}")
       return
     SOLVIEW_PERF_HEIGHT.set(data[0].get('slot'))
     SOLVIEW_PERF_TXS.set(data[0].get('numTransactions'))
@@ -157,22 +157,22 @@ def watch_accounts(node_address, accounts):
       '''
       curl http://localhost:8899 -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0", "id":1, "method":"getBalance", "params":["83astBRguLMdt2h5U1Tpdq5tjFoJ6noeGwaY3mDLVcri"]}'
       '''
-      logger.debug("Sending watch accounts request for {} to {}...".format(address, node_address))
+      logger.debug(f"Sending watch accounts request for {address} to {node_address} ...")
       res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getBalance', 'id': 0, 'params': [address]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
       data = res.json().get('result')
       if data is None or len(data) == 0:
-        logger.error("getBalance call failed. Details: \n{}".format(data))
+        logger.error(f"getBalance call failed. Details:\n{data}")
         return
       SOLVIEW_ACCOUNTS_SOL.labels(address).set(data.get('value'))
 
 
 def watch_spl_accounts(node_address, spl_accounts):
    for address in spl_accounts:
-      logger.debug("Sending watch SPL accounts request for {} to {}...".format(address, node_address))
+      logger.debug(f"Sending watch SPL accounts request for {address} to {node_address} ...")
       res = requests.post(node_address, json={'jsonrpc': '2.0', 'method': 'getTokenAccountBalance', 'id': 0, 'params': [address]}, headers={'Content-Type': 'application/json'}, timeout=(7, 33))
       data = res.json().get('result')
       if data is None or len(data) == 0:
-        logger.error("getTokenAccountBalance call failed. Details: \n{}".format(data))
+        logger.error(f"getTokenAccountBalance call failed. Details:\n{data}")
         return
 
       SOLVIEW_ACCOUNTS_SPL.labels(address).set(data.get('value').get('uiAmount'))
@@ -184,10 +184,10 @@ def main():
     addresses = list(filter(lambda x: x != '', os.getenv('SOLVIEW_ADDRESSES', '').split(',')))
     spl_addresses = list(filter(lambda x: x != '', os.getenv('SOLVIEW_SPL_ADDRESSES', '').split(',')))
 
-    logger.info("Listening port: {}".format(port))
-    logger.info("Node address: {}".format(node_address))
-    logger.info("Solview addresses: {}".format(", ".join(addresses)))
-    logger.info("SPL addresses: {}".format(", ".join(spl_addresses)))
+    logger.info(f"Listening port: {port}")
+    logger.info(f"Node address: {node_address}")
+    logger.info("Solview addresses: " + ", ".join(addresses))
+    logger.info("SPL addresses: " + ", ".join(spl_addresses))
 
     # Start up the server to expose the metrics.
     start_http_server(port)

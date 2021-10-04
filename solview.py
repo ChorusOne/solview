@@ -54,7 +54,7 @@ def vote_accounts(node_address):
     logger.debug(f"Sending vote accounts request to {node_address} ...")
     data = call_rpc(node_address, 'getVoteAccounts', [])
     if data is None or len(data) == 0:
-      logger.error(f"getVoteAccounts call failed. Details:\n{data}")
+      logger.error(f"getVoteAccounts call failed.")
       return
     cluster_stake = [0,0]
     for status, status_code in {'current': 1, 'delinquent': 0}.items():
@@ -86,7 +86,7 @@ def cluster(node_address):
     logger.debug(f"Sending cluster request to {node_address} ...")
     data = call_rpc(node_address, 'getClusterNodes', [])
     if data is None or len(data) == 0:
-      logger.error(f"getClusterNodes call failed. Details:\n{data}")
+      logger.error(f"getClusterNodes call failed.")
       return
     cluster_versions = {}
     for node in data:
@@ -117,7 +117,7 @@ def skip_rates(node_address):
     logger.debug(f"Sending skip rates request to {node_address} ...")
     data = call_rpc(node_address, 'getBlockProduction', [])
     if data is None or len(data) == 0:
-      logger.error(f"getBlockProduction call failed. Details:\n{data}")
+      logger.error(f"getBlockProduction call failed.")
       return
     skip_rates = []
     total_slots = 0
@@ -138,7 +138,7 @@ def performance(node_address):
     logger.debug(f"Sending performance request to {node_address} ...")
     data = call_rpc(node_address, 'getRecentPerformanceSamples', [1])
     if data is None or len(data) == 0:
-      logger.error(f"getRecentPerformanceSamples call failed. Details:\n{data}")
+      logger.error(f"getRecentPerformanceSamples call failed.")
       return
     SOLVIEW_PERF_HEIGHT.set(data[0].get('slot'))
     SOLVIEW_PERF_TXS.set(data[0].get('numTransactions'))
@@ -157,7 +157,7 @@ def watch_accounts(node_address, accounts):
       logger.debug(f"Sending watch accounts request for {address} to {node_address} ...")
       data = call_rpc(node_address, 'getBalance', [address])
       if data is None or len(data) == 0:
-        logger.error(f"getBalance call failed. Details:\n{data}")
+        logger.error(f"getBalance call failed.")
         return
       SOLVIEW_ACCOUNTS_SOL.labels(address).set(data.get('value'))
 
@@ -167,7 +167,7 @@ def watch_spl_accounts(node_address, spl_accounts):
       logger.debug(f"Sending watch SPL accounts request for {address} to {node_address} ...")
       data = call_rpc(node_address, 'getTokenAccountBalance', [address])
       if data is None or len(data) == 0:
-        logger.error(f"getTokenAccountBalance call failed. Details:\n{data}")
+        logger.error(f"getTokenAccountBalance call failed.")
         return
 
       SOLVIEW_ACCOUNTS_SPL.labels(address).set(data.get('value').get('uiAmount'))
@@ -189,7 +189,16 @@ def call_rpc(address, method, params):
         },
         timeout=(connect_timeout_seconds, read_timeout_seconds),
     )
-    return response.json().get('result')
+    data = response.json().get('result')
+
+    if data is None or len(data) == 0:
+        logger.debug(f"Request to {address} with method {method} and params {params} failed.")
+        logger.debug(f"Return code: {response.status_code}")
+        logger.debug(f"Reason: {response.reason}")
+        logger.debug(f"Headers: {response.headers}")
+        logger.debug(f"Content: {response.content}")
+
+    return data
 
 
 def main():
@@ -221,14 +230,12 @@ def main():
 
 if __name__ == '__main__':
     logger.info("Starting Solview.")
-    while True:
-        try:
-            main()
-        except KeyboardInterrupt:
-            sys.exit(0)
-        except BrokenPipeError:
-            sys.exit(0)
-        except Exception:
-          logger.exception("Exception occurred")
-          # XXX
-          raise
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(0)
+    except BrokenPipeError:
+        sys.exit(0)
+    except Exception:
+      logger.exception("Exception occurred")
+      raise
